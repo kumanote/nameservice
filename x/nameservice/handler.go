@@ -4,26 +4,23 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/kumanote/nameservice/x/nameservice/keeper"
 	"github.com/kumanote/nameservice/x/nameservice/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // NewHandler ...
-func NewHandler(k keeper.Keeper) sdk.Handler {
+func NewHandler(keeper keeper.Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-		ctx = ctx.WithEventManager(sdk.NewEventManager())
 		switch msg := msg.(type) {
-    // this line is used by starport scaffolding # 1
-		case types.MsgCreateWhois:
-			return handleMsgCreateWhois(ctx, k, msg)
-		case types.MsgSetWhois:
-			return handleMsgSetWhois(ctx, k, msg)
-		case types.MsgDeleteWhois:
-			return handleMsgDeleteWhois(ctx, k, msg)
+		case types.MsgSetName:
+			return handleMsgSetName(ctx, keeper, msg)
+		case types.MsgBuyName:
+			return handleMsgBuyName(ctx, keeper, msg)
+		case types.MsgDeleteName:
+			return handleMsgDeleteName(ctx, keeper, msg)
 		default:
-			errMsg := fmt.Sprintf("unrecognized %s message type: %T", types.ModuleName, msg)
-			return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, errMsg)
+			return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Unrecognized nameservice Msg type: %v", msg.Type()))
 		}
 	}
 }
