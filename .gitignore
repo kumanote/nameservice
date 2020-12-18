@@ -2,3 +2,31 @@ vue/node_modules
 vue/dist
 vue/.cache
 build
+
+# lock
+*.lock
+
+# pids
+*.pid
+*.seed
+
+# for Windows
+Thumbs.db
+Desktop.ini
+ssh.exe.stackdump
+ubuntu-xenial-16.04-cloudimg-console.log
+
+# for OSX
+.DS_Store
+
+# swp
+*.swp
+
+# ide
+.idea/
+
+# direnv
+.envrc
+
+# goenv
+.go-version
