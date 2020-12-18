@@ -2,29 +2,24 @@ package rest
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/kumanote/nameservice/x/nameservice/types"
 )
 
-// Used to not have an error if strconv is unused
-var _ = strconv.Itoa(42)
-
-type createWhoisRequest struct {
+type buyNameRequest struct {
 	BaseReq rest.BaseReq `json:"base_req"`
-	Creator string `json:"creator"`
-	Value string `json:"value"`
-	Price string `json:"price"`
-	
+	Buyer   string       `json:"buyer"`
+	Name    string       `json:"name"`
+	Price   string       `json:"price"`
 }
 
-func createWhoisHandler(cliCtx context.CLIContext) http.HandlerFunc {
+func buyNameHandler(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req createWhoisRequest
+		var req buyNameRequest
 		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse request")
 			return
@@ -33,24 +28,17 @@ func createWhoisHandler(cliCtx context.CLIContext) http.HandlerFunc {
 		if !baseReq.ValidateBasic(w) {
 			return
 		}
-		creator, err := sdk.AccAddressFromBech32(req.Creator)
+		addr, err := sdk.AccAddressFromBech32(req.Buyer)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
-
-		
-		parsedValue := req.Value
-		
-		parsedPrice := req.Price
-		
-
-		msg := types.NewMsgCreateWhois(
-			creator,
-			parsedValue,
-			parsedPrice,
-			
-		)
+		coins, err := sdk.ParseCoins(req.Price)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		msg := types.NewMsgBuyName(req.Name, coins, addr)
 
 		err = msg.ValidateBasic()
 		if err != nil {
@@ -64,11 +52,9 @@ func createWhoisHandler(cliCtx context.CLIContext) http.HandlerFunc {
 
 type setWhoisRequest struct {
 	BaseReq rest.BaseReq `json:"base_req"`
-	ID 		string `json:"id"`
-	Creator string `json:"creator"`
-	Value string `json:"value"`
-	Price string `json:"price"`
-	
+	Name    string       `json:"name"`
+	Value   string       `json:"value"`
+	Owner   string       `json:"owner"`
 }
 
 func setWhoisHandler(cliCtx context.CLIContext) http.HandlerFunc {
@@ -82,25 +68,12 @@ func setWhoisHandler(cliCtx context.CLIContext) http.HandlerFunc {
 		if !baseReq.ValidateBasic(w) {
 			return
 		}
-		creator, err := sdk.AccAddressFromBech32(req.Creator)
+		addr, err := sdk.AccAddressFromBech32(req.Owner)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
-
-		
-		parsedValue := req.Value
-		
-		parsedPrice := req.Price
-		
-
-		msg := types.NewMsgSetWhois(
-			creator,
-			req.ID,
-			parsedValue,
-			parsedPrice,
-			
-		)
+		msg := types.NewMsgSetName(req.Name, req.Value, addr)
 
 		err = msg.ValidateBasic()
 		if err != nil {
@@ -114,8 +87,8 @@ func setWhoisHandler(cliCtx context.CLIContext) http.HandlerFunc {
 
 type deleteWhoisRequest struct {
 	BaseReq rest.BaseReq `json:"base_req"`
-	Creator string `json:"creator"`
-	ID 		string `json:"id"`
+	Owner   string       `json:"owner"`
+	Name    string       `json:"name"`
 }
 
 func deleteWhoisHandler(cliCtx context.CLIContext) http.HandlerFunc {
@@ -129,12 +102,12 @@ func deleteWhoisHandler(cliCtx context.CLIContext) http.HandlerFunc {
 		if !baseReq.ValidateBasic(w) {
 			return
 		}
-		creator, err := sdk.AccAddressFromBech32(req.Creator)
+		addr, err := sdk.AccAddressFromBech32(req.Owner)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
-		msg := types.NewMsgDeleteWhois(req.ID, creator)
+		msg := types.NewMsgDeleteName(req.Name, addr)
 
 		err = msg.ValidateBasic()
 		if err != nil {
